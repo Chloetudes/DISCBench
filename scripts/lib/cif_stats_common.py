@@ -445,10 +445,10 @@ def filter_analysis_cohort(
     return q, r
 
 
-def _scored_rows_for_qid(replies: pd.DataFrame, qid: str, source: str) -> pd.DataFrame:
+def _scored_rows_for_qid(replies: pd.DataFrame, qid: str, _source: str) -> pd.DataFrame:
+    """PK / 跨集对比：仅统计 CANONICAL_8（向后兼容保留第三参）。"""
     g = replies[replies["qid"].astype(str) == str(qid)]
-    if source != OURS_SOURCE:
-        g = g[g["logical_model"].isin(CANONICAL_8)]
+    g = g[g["logical_model"].isin(CANONICAL_8)]
     return g.dropna(subset=["score"])
 
 
@@ -466,7 +466,10 @@ def verify_cohort_completeness(questions: pd.DataFrame, replies: pd.DataFrame) -
             expected = PUBLIC_ANALYSIS_N
         n_any_reply = n_any_score = n_ge_min = n_both = 0
         for qid in qids:
-            g = replies[replies["qid"].astype(str) == str(qid)]
+            g = replies[
+                (replies["qid"].astype(str) == str(qid))
+                & replies["logical_model"].isin(CANONICAL_8)
+            ]
             gs = _scored_rows_for_qid(replies, qid, src)
             if len(g) > 0:
                 n_any_reply += 1
@@ -511,19 +514,27 @@ def prepare_analysis_tables(
     sheet: str = "数据对齐",
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    加载 → 完整性检查 → 过滤到 800+200 cohort → 题级表。
-    返回 (coverage_report, questions_cohort, replies_cohort, items)
+    加载 → cohort 完整性（8 模型口径）→ 过滤 1000 题 cohort → **仅 CANONICAL_8 回复行** → 题级表。
+    （DISCBench 特有 4 模型不计入 PK 对比；12 模型总榜另用全表 replies_all 计算。）
+    返回 (coverage_report, questions_cohort, replies_cohort_pk8, items)
     """
     questions = load_questions(questions_path, sheet=sheet)
     replies = load_replies_with_scores(replies_path, questions)
     coverage = verify_cohort_completeness(questions, replies)
     questions, replies = filter_analysis_cohort(questions, replies)
+    replies = replies[replies["logical_model"].isin(CANONICAL_8)].copy()
     items = build_item_level_table(questions, replies)
     return coverage, questions, replies, items
 
 
 def build_item_level_table(questions: pd.DataFrame, replies: pd.DataFrame) -> pd.DataFrame:
-    """题级指标（仅 questions 中 cohort 题目；需 ≥MIN_MODELS 有评估分才产出均分/D）。"""
+    """题级指标（仅 questions 中 cohort 题目；需 ≥MIN_MODELS 有评估分才产出均分/D）。
+
+    区分度 D（PK cohort · 跨数据集可比）：
+      一律仅使用 ``CANONICAL_8`` 的模型分（与公开四集一致）；与
+      ``generate_benchmark_source_summary_report.build_source_discrimination`` 口径对齐。
+      DISCBench 12 模型专项见 ``_discbench_*`` 等表，不在此混用 12 模型算 D。
+    """
     rows: List[Dict] = []
     qidx = questions.set_index("qid")
 
@@ -533,10 +544,7 @@ def build_item_level_table(questions: pd.DataFrame, replies: pd.DataFrame) -> pd
             qrow = qrow.iloc[0]
         src = str(qrow["source"])
         g = replies[replies["qid"].astype(str) == str(qid)]
-        if src != OURS_SOURCE:
-            g2 = g[g["logical_model"].isin(CANONICAL_8)].dropna(subset=["score"])
-        else:
-            g2 = g.dropna(subset=["score"])
+        g2 = g[g["logical_model"].isin(CANONICAL_8)].dropna(subset=["score"])
         scores = g2.groupby("model")["score"].first()
         has_reply = len(g) > 0
         has_score = len(scores) > 0
@@ -614,7 +622,7 @@ def tier_mean_score_pivot(items: pd.DataFrame) -> pd.DataFrame:
 
 
 def tier_mean_disc_pivot(items: pd.DataFrame) -> pd.DataFrame:
-    """各 source × 难度档 → 题均区分度 D 的均值（仅 disc 有效题；难度档来自 difficulty_score）。"""
+    """各 source × 难度档 → 题均区分度 D 的均值（disc 口径：CANONICAL_8，含 Ours，与 PK 跨集可比）。难度档来自 difficulty_score。"""
     out = pd.DataFrame(index=SOURCE_ORDER_DISPLAY, columns=TIER_LABELS, dtype=float)
     for src in SOURCE_ORDER:
         sub = items[items["source"] == src]

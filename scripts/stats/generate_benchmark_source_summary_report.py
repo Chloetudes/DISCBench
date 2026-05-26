@@ -126,6 +126,8 @@ def load_data(replies_path: Path, questions_path: Path) -> tuple[pd.DataFrame, p
             replies[col] = pd.to_numeric(replies[col], errors="coerce")
     replies[GPT54_MEAN_SCORE_COL] = replies.apply(gpt54_mean_score, axis=1)
     replies = replies[replies["qid"].astype(str).isin(cohort_qids)].copy()
+    # 跨数据集对比与综合统计一致：只保留 8 个可比模型行，不混入 DISCBench 额外 4 模型
+    replies = replies[replies["logical_model"].isin(CANONICAL_8)].copy()
 
     diff_col = "difficulty_score" if "difficulty_score" in qs.columns else None
     return replies, qs, diff_col, coverage
@@ -415,6 +417,7 @@ def main() -> None:
 
     meta = pd.DataFrame([
         {"项": "分析cohort", "值": f"公开4×{PUBLIC_ANALYSIS_N} + Ours前{PK_OURS_N} = 1000题"},
+        {"项": "回复行过滤", "值": "仅 CANONICAL_8；12 模型 DISCBench 总榜见 comprehensive 表3-3"},
         {"项": "统一裁判", "值": GPT54_JUDGE_MODEL},
         {"项": "统计主分", "值": f"{PRIMARY_SCORE_LABEL} = mean({', '.join(GPT54_SCORE_COLS)})"},
         {"项": "2_score", "值": "Claude 裁判，仅作一致性对比"},

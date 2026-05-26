@@ -95,8 +95,7 @@ def check_replies_alignment(replies_path: Path, q: pd.DataFrame) -> tuple[pd.Dat
         n_q = sub["qid"].nunique()
         n_ge4 = 0
         for qid, g in sub.groupby("qid"):
-            if src != OURS_SOURCE:
-                g = g[g["logical_model"].isin(CANONICAL_8)]
+            g = g[g["logical_model"].isin(CANONICAL_8)]
             g = g.dropna(subset=["score"])
             if len(g.groupby("model")["score"].first()) >= MIN_MODELS:
                 n_ge4 += 1

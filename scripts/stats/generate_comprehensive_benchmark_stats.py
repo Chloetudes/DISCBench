@@ -14,8 +14,8 @@ DISCBench / Compared benchmark 综合统计（论文复现用）。
   3. 难度档 × 考点数分箱热力图 + 相关
   4. 题目表全量 query 长度（1300 题）
   5. 综合对比表（来源维度）
-  6. 公开 8 模型 / DISCBench 12 模型得分
-  7. L1 × 模型均分（DISCBench 全 L1 × 12 模型）
+  6. PK 对比：8 模型 × 5 数据集（各 200 题 cohort，无额外模型行）
+  7. DISCBench：12 模型总榜（500 题）+ L1 × 12（仅自建集）
   8. 数据集元信息（难度/约束/任务覆盖）
   9. 数据集 × 六类约束个数热力图
  10. 展示名：Ours → DISCBench，排在末尾
@@ -247,16 +247,14 @@ def _difficulty_checkpoint_heatmaps(
 
 
 def _model_source_pivot(replies: pd.DataFrame) -> pd.DataFrame:
-    """12 模型 × 5 数据来源 → 均分（有评估分即计入，纵轴模型，横轴来源）。"""
-    r = replies.copy()
-    r["model_12"] = r["model"].map(to_discbench_model)
-    r = r[r["model_12"].astype(str).str.len() > 0]
+    """8 模型 × 5 数据来源 → 均分（PK cohort CANONICAL_8 回复行）。不含 DISCBench 特有 4 模型。"""
+    r = replies[replies["logical_model"].isin(CANONICAL_8)].copy()
     rows: List[Dict] = []
     for src in SOURCE_ORDER:
         sub = r[(r["source"] == src)].dropna(subset=["score"])
         dlabel = display_source(src)
-        for model in CANONICAL_12:
-            g = sub[sub["model_12"] == model]
+        for model in CANONICAL_8:
+            g = sub[sub["logical_model"] == model]
             rows.append({
                 "模型": model,
                 "数据来源": dlabel,
@@ -268,7 +266,7 @@ def _model_source_pivot(replies: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
         return pd.DataFrame()
     pv = df.pivot_table(index="模型", columns="数据来源", values="均分", aggfunc="first")
-    pv = pv.reindex(index=CANONICAL_12, columns=SOURCE_ORDER_DISPLAY)
+    pv = pv.reindex(index=CANONICAL_8, columns=SOURCE_ORDER_DISPLAY)
     return pv
 
 
@@ -487,7 +485,10 @@ def run(
         {"项": "题级统计门槛", "值": f"≥{MIN_MODELS} 个模型有评估分"},
         {"项": "预设难度", "值": "difficulty_score（Stage1 指令质量分）"},
         {"项": "难度档", "值": "difficulty_score → D(0-20) C(20-40) B(40-60) A(60-80) S(80-100)"},
-        {"项": "区分度D", "值": "高/低27%模型均分差 ÷ 极差"},
+        {"项": "区分度D", "值": "高/低27%模型均分差 ÷ 极差（每项按模型分列取分后再算）"},
+        {"项": "区分度D_模型集合(PK)", "值": "各题仅用 CANONICAL_8（含 DISCBench），与公开四集及表6题级D口径一致"},
+        {"项": "PK回复行", "值": "cohort 内仅保留 CANONICAL_8 行；不参与 PK 的多余模型行不参与任何跨集表/图"},
+        {"项": "12模型口径", "值": "仅 DISCBench 全库500题 · 总分排名与表4-1 L1×12；不混入 PK 与其他四集矩阵"},
         {"项": "数据集总表", "值": "01_数据集总表：题库全量字段 + PK cohort 评估字段"},
         {"项": "D=0占比", "值": "题级区分度 D=0（各模型分数完全一致，极差=0）"},
     ])
@@ -497,7 +498,7 @@ def run(
     corr_diff_mean = _difficulty_mean_corr(items_scored)
     corr_diff_cp, cp_ct_all = _difficulty_checkpoint_heatmaps(questions, charts_dir)
     model_scores = _model_scores_table(replies)
-    model_source_pv = _model_source_pivot(replies_all)
+    model_source_pv = _model_source_pivot(replies)
     discbench_12 = _discbench_12_model_scores(replies_all, questions_all)
     discbench_12_pv = _discbench_12_model_pivot(discbench_12)
     discbench_l1 = _discbench_l1_model_table(replies_all, questions_all)
@@ -588,19 +589,19 @@ def run(
         )
         chart_manifest.append(("5. DISCBench · 12-model mean score ranking", p5))
 
-    # 6. 12 models × 5 datasets
+    # 6. 8 models × 5 datasets (PK cohort only)
     if not model_source_pv.empty:
         p6 = charts_dir / "06_models_x_sources.png"
         plot_heatmap(
             model_source_pv,
             p6,
-            "12 models × 5 datasets · mean score (scored items only, mean(1_score,3_score))",
+            "8 models × 5 datasets · PK cohort mean score (CANONICAL_8, 200/source, mean(1,3))",
             fmt=".1f",
             cbar_label="Mean score",
             xlabel="Dataset",
             ylabel="Model",
         )
-        chart_manifest.append(("6. 12 models × 5 datasets: mean score", p6))
+        chart_manifest.append(("6. PK · 8 models × 5 datasets: mean score", p6))
 
     # 7. DISCBench · L1 × 12 models
     if not discbench_l1_pv.empty:
@@ -712,8 +713,8 @@ def run(
         ])
         write_stacked_tables(w, "表2_难度与区分度", sec2)
         sec3: List[Tuple[str, pd.DataFrame]] = [
-            ("表3-1  12 模型 × 5 数据集均分矩阵（有评估分即计入）", model_source_pv),
-            ("表3-2  8 模型 × 来源均分明细", model_scores),
+            ("表3-1  8 模型 × 5 数据集均分矩阵（PK cohort×200/source，CANONICAL_8）", model_source_pv),
+            ("表3-2  8 模型 × 来源均分明细（长表）", model_scores),
         ]
         if not discbench_12.empty:
             sec3.append(("表3-3  DISCBench · 12 模型均分与排名（500 题）", discbench_12))

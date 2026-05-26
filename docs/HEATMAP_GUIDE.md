@@ -29,7 +29,7 @@
 | `03_difficulty_vs_checkpoint_all.png` | Checkpoint count bin × difficulty tier |
 | `04_query_length_by_source.png` | Mean instruction length by dataset |
 | `05_discbench_12_models_mean.png` | DISCBench 500 items · 12-model means |
-| `06_models_x_sources.png` | 12 models × 5 datasets |
+| `06_models_x_sources.png` | 8 models × 5 datasets (PK cohort, CANONICAL_8) |
 | `07_discbench_l1_x_12models.png` | DISCBench L1 × 12 models |
 | `07b_l1_x_8models_pk.png` | PK cohort L1 × 8 models |
 | `09_source_constraint_pct.png` | Dataset × six constraint types (%) |
