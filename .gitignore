@@ -1,0 +1,12 @@
+config.py
+data/_staging/
+output/
+.pydeps/
+__pycache__/
+*.pyc
+.DS_Store
+*.xlsx.bak*
+data/*.bak*
+evaluation/**/__pycache__/
+clients/**/__pycache__/
+scripts/**/__pycache__/

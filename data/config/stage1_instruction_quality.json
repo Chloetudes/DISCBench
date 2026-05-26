@@ -1,0 +1,27 @@
+{
+  "_comment": "Stage 1 · instruction quality (IQ). Canonical store: data/questions.jsonl",
+  "report_title": "DISCBench · Stage1 指令质量",
+  "project_root_dir": ".",
+  "output_base_dir": "output",
+  "data_batch": "compared_all",
+  "stages": ["evaluate_instructions"],
+  "sysprompt_excel": "data/sysprompts.xlsx",
+  "provider": "idealab",
+  "timeout": 300,
+  "skip_judge_validation": true,
+  "check_judge_before_use": false,
+  "questions_excel": "data/_staging/questions.xlsx",
+  "questions_sheet": "数据对齐",
+  "instruction_quality": {
+    "input_excel": "data/_staging/questions.xlsx",
+    "questions_sheet": "数据对齐",
+    "questions_excel": "data/_staging/questions.xlsx",
+    "output_excel": "output/stage1_quality/instruction_quality.xlsx",
+    "merge_back": true,
+    "sysprompt_name": "instruction_quality_evaluation",
+    "judge_models_excel": "data/models.xlsx",
+    "max_workers": 3,
+    "checkpoint_interval": 10,
+    "overwrite_mode": "skip"
+  }
+}
