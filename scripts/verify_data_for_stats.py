@@ -137,7 +137,16 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--questions", default=str(resolve_questions_path()))
     ap.add_argument("--replies", default=str(resolve_replies_path()))
-    ap.add_argument("--output", default=str(_ROOT / "output/reports/data_ready_for_stats.xlsx"))
+    ap.add_argument(
+        "--output",
+        default=str(_ROOT / "output/reports/data_ready_for_stats.xlsx"),
+        help="Optional Excel audit workbook (skipped if --no-excel).",
+    )
+    ap.add_argument(
+        "--no-excel",
+        action="store_true",
+        help="Only print readiness tables (no auxiliary xlsx under output/).",
+    )
     args = ap.parse_args()
 
     q = load_questions(Path(args.questions), sheet="数据对齐")
@@ -156,16 +165,16 @@ def main() -> None:
         {"项": "2_score说明", "值": "Claude 裁判，仅用于一致性对比，不作主统计"},
     ])
 
-    out = Path(args.output)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    with pd.ExcelWriter(out, engine="openpyxl") as w:
-        meta.to_excel(w, sheet_name="00_说明", index=False)
-        q_check.to_excel(w, sheet_name="01_题目表覆盖", index=False)
-        coverage.to_excel(w, sheet_name="02_cohort回复覆盖", index=False)
-        r_align.to_excel(w, sheet_name="03_回复分列对齐", index=False)
-        rounds.to_excel(w, sheet_name="04_裁判轮次", index=False)
-
-    print(f"✓ {out}")
+    if not args.no_excel:
+        out = Path(args.output)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        with pd.ExcelWriter(out, engine="openpyxl") as w:
+            meta.to_excel(w, sheet_name="00_说明", index=False)
+            q_check.to_excel(w, sheet_name="01_题目表覆盖", index=False)
+            coverage.to_excel(w, sheet_name="02_cohort回复覆盖", index=False)
+            r_align.to_excel(w, sheet_name="03_回复分列对齐", index=False)
+            rounds.to_excel(w, sheet_name="04_裁判轮次", index=False)
+        print(f"✓ {out}")
     print("\n=== 题目表 ===")
     print(q_check.to_string(index=False))
     print("\n=== 回复主分列（GPT-5.4 对齐）===")

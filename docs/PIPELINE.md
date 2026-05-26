@@ -9,7 +9,7 @@ bash scripts/setup.sh
 bash scripts/run_stats.sh
 ```
 
-输出：`output/reports/paper_benchmark_tables.xlsx`
+输出：**`output/reports/paper_benchmark_tables.xlsx`**（仅此一份统计簿） + **`output/reports/charts/*.png`**（另有总册内 Charts sheet）。
 
 ## 数据准备 + 统计
 
@@ -43,4 +43,4 @@ bash scripts/run_stats.sh
 | `stats/generate_benchmark_source_summary_report.py` | 模型排名 / 裁判 |
 | `stats/generate_paper_benchmark_workbook.py` | 合并论文总册 |
 
-统一常量：`scripts/lib/cif_stats_common.py` · 脚本索引见 [scripts/README.md](../scripts/README.md)
+合并完成后，`run_stats.sh` 会删除 `comprehensive_benchmark_stats.xlsx` 与 `benchmark_source_model_summary.xlsx`，磁盘上只保留 **`paper_benchmark_tables.xlsx`** 与 **`charts/*.png`**。

@@ -6,6 +6,7 @@ from __future__ import annotations
 from pathlib import Path
 
 CIF_ROOT = Path(__file__).resolve().parents[2]
+DISCBENCH_ROOT = CIF_ROOT  # alias for tooling / README
 QUESTIONS_SHEET = "数据对齐"  # staging sheet name (stage bridge)
 REPORTS_DIR = CIF_ROOT / "output/reports"
 CHARTS_DIR = REPORTS_DIR / "charts"

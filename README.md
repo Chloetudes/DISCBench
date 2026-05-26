@@ -8,7 +8,7 @@ Four-stage pipeline with **JSONL as the canonical data store**. Evaluation stage
 Stage 1  instruction quality   →  updates questions.jsonl
 Stage 2  reply generation      →  updates replies.jsonl
 Stage 3  reply evaluation      →  updates replies.jsonl (judge scores)
-Stage 4  statistics & charts   →  output/reports/  (offline)
+Stage 4  statistics   →  **`output/reports/paper_benchmark_tables.xlsx`** + **`output/reports/charts/*.png`**（中间汇总表在合并后自动删除，不留在磁盘）
 ```
 
 ---
@@ -21,7 +21,9 @@ bash scripts/check_setup.sh
 bash scripts/run_stats.sh
 ```
 
-**Output:** `output/reports/paper_benchmark_tables.xlsx` · **Charts:** `output/reports/charts/`
+**Output:** **`output/reports/paper_benchmark_tables.xlsx`**（唯一统计总表，含 Charts sheet） · **PNG：** `output/reports/charts/`  
+
+**Repo / Git：** 默认 **仅**跟踪上述总表与 `charts/*.png`；其余 `output/`（含 Stage1 日志、`data_ready_for_stats.xlsx` 等）仍为忽略项。推送前请先本地执行 `bash scripts/run_stats.sh` 再 `git add output/reports/`。
 
 If `data/questions.jsonl` is missing but legacy xlsx exists, `setup.sh` runs `consolidate_discbench_data.py` automatically.
 

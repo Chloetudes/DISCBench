@@ -1,6 +1,15 @@
 config.py
 data/_staging/
-output/
+
+# Generated output: ship only paper workbook + chart PNGs (see README).
+output/*
+!output/reports/
+output/reports/*
+!output/reports/paper_benchmark_tables.xlsx
+!output/reports/charts/
+output/reports/charts/*
+!output/reports/charts/*.png
+
 .pydeps/
 __pycache__/
 *.pyc

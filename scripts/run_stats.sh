@@ -11,11 +11,11 @@ python3 - <<'PY'
 import sys
 from pathlib import Path
 sys.path.insert(0, "scripts")
-from lib.paths import CIF_ROOT, QUESTIONS_JSONL, REPLIES_JSONL
+from lib.paths import DISCBENCH_ROOT, QUESTIONS_JSONL, REPLIES_JSONL
 
 def rel(p):
     try:
-        return p.relative_to(CIF_ROOT).as_posix()
+        return p.relative_to(DISCBENCH_ROOT).as_posix()
     except ValueError:
         return str(p)
 
@@ -24,17 +24,16 @@ print(f"  回复: {rel(REPLIES_JSONL)}")
 PY
 echo ""
 
-echo "=== [1/3] 综合统计 ==="
 python3 scripts/stats/generate_comprehensive_benchmark_stats.py
 
-echo ""
-echo "=== [2/3] 模型均分 / 裁判一致性 ==="
 python3 scripts/stats/generate_benchmark_source_summary_report.py
 
-echo ""
-echo "=== [3/3] 合并论文用总册 ==="
 python3 scripts/stats/generate_paper_benchmark_workbook.py
 
+# 中间汇总表不写库：仅保留论文总册 + charts（PNG 由 comprehensive 脚本生成）
+rm -f "$ROOT/output/reports/comprehensive_benchmark_stats.xlsx" \
+       "$ROOT/output/reports/benchmark_source_model_summary.xlsx" \
+       "$ROOT/output/reports/data_ready_for_stats.xlsx"
+
 echo ""
-echo "✅ 输出目录: $ROOT/output/reports/"
-echo "   📄 论文用总册: output/reports/paper_benchmark_tables.xlsx"
+echo "✅ 统计产出: output/reports/paper_benchmark_tables.xlsx (+ output/reports/charts/*.png)"

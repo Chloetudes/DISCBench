@@ -102,8 +102,8 @@ print("\n  Data audit passed.")
 PY
 echo ""
 
-echo ">>> [3/4] verify_data_for_stats.py"
-python3 scripts/verify_data_for_stats.py
+echo ">>> [3/4] verify_data_for_stats.py (console only)"
+python3 scripts/verify_data_for_stats.py --no-excel
 echo ""
 
 echo ">>> [4/4] run_stats.sh (reproduce paper tables)"

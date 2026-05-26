@@ -31,6 +31,8 @@ Stats logic is unchanged: PK cohort = 4×200 public + Ours first 200 by `qid`; p
 | `data/sysprompts/`, `data/config/` | Stage configs |
 | `evaluation/`, `clients/`, `scripts/`, `requirements.txt` | Code |
 | `README.md`, `docs/`, `config.example.py` | Docs |
+| `output/reports/paper_benchmark_tables.xlsx` | **论文统计总表（跑 `run_stats.sh` 后提交）** |
+| `output/reports/charts/*.png` | **导出的统计图（同上）** |
 
 ### Optional (smaller clone without full flat JSONL)
 
@@ -41,9 +43,9 @@ Stats logic is unchanged: PK cohort = 4×200 public + Ours first 200 by `qid`; p
 ### Exclude (`.gitignore`)
 
 | Path | Reason |
-|------|--------|
+|------|------|
 | `config.py` | API secrets |
-| `output/` | Generated reports |
+| Most of `output/` | Stage 产物、中间文件；**例外**：`output/reports/paper_benchmark_tables.xlsx` 与 `output/reports/charts/*.png` **可提交**（见根目录 `.gitignore` 否定规则） |
 | `.pydeps/` | Local vendored libs |
 | `data/_staging/` | Generated staging xlsx |
 | `*.xlsx.bak*`, `data/*.bak*` | Backups |
